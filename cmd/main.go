@@ -4,7 +4,6 @@ import (
 	"bankingsystem/cmd/server"
 	"bankingsystem/pkg/handler"
 	"bankingsystem/pkg/repository"
-	kafkaproducer "bankingsystem/pkg/repository/kafka-producer"
 	"bankingsystem/pkg/service"
 	"os"
 
@@ -42,10 +41,8 @@ func main() {
 		DB:       viper.GetInt("redis.db"),
 	})
 
-	producer := kafkaproducer.NewProducer(viper.GetString("kafka.brokers"), "jk")
-
 	repo := repository.NewRepository(db, rdb)
-	services := service.NewService(repo, producer)
+	services := service.NewService(repo)
 	handlers := handler.NewHandler(services)
 
 	srv := new(server.Server)

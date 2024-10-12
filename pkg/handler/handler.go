@@ -21,7 +21,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		api.POST("", h.createAccount)               //
 		api.DELETE("/:account_id", h.deleteAccount) //
 		api.GET("/:account_id", h.getAccount)       //
-		api.GET("", h.getAllAccounts)
+		api.GET("", h.getAllAccounts)               //
 
 		api.POST("/:account_id/deposit", h.deposit)
 		api.POST("/:account_id/withdraw", h.withdraw)

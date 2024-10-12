@@ -1,4 +1,4 @@
-package kafkaproducer
+package repository
 
 import (
 	"log"
@@ -8,24 +8,23 @@ import (
 
 type Producer struct {
 	producer *kafka.Producer
-	topic    string
 }
 
-func NewProducer(brokers, topic string) *Producer {
+func NewProducer(brokers string) *Producer {
 	config := &kafka.ConfigMap{"bootstrap.servers": brokers}
 	p, err := kafka.NewProducer(config)
 	if err != nil {
 		log.Fatalf("Failed to create producer: %s", err)
 	}
 
-	return &Producer{producer: p, topic: topic}
+	return &Producer{producer: p}
 }
 
-func (p *Producer) SendMessage(message []byte) error {
+func (p *Producer) SendMessage(message []byte, topic string) error {
 	deliveryChan := make(chan kafka.Event)
 
 	err := p.producer.Produce(&kafka.Message{
-		TopicPartition: kafka.TopicPartition{Topic: &p.topic, Partition: kafka.PartitionAny},
+		TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
 		Value:          message,
 	}, deliveryChan)
 

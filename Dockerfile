@@ -1,11 +1,22 @@
-FROM golang:1.22-alpine
+FROM golang:1.20 AS builder
 
-COPY . /appGo
+WORKDIR /app
 
-WORKDIR /appGo
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+RUN go build -o myapp .
+
+FROM alpine:latest
+
+RUN apk --no-cache add ca-certificates
+
+COPY --from=builder /app/myapp /myapp
+
+ENV PORT=8080
 
 EXPOSE 8080
 
-RUN go build main.go
-
-CMD [ "./main" ]
+CMD ["/myapp"]

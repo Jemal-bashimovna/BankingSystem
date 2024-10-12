@@ -3,12 +3,12 @@ port : "8080"
 db:
   host: "localhost"
   port: "5432"
-  user: "jemal"
+  user: "postgres"
   dbname: "banking"
   sslmode: "disable"
 
 redis:
-  host: "localhost"
+  host: "127.0.0.1"
   port: "6379"
   password: ""
   db: 0
