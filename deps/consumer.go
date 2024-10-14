@@ -1,4 +1,4 @@
-package kafkaproducer
+package deps
 
 import (
 	"log"
@@ -26,15 +26,12 @@ func NewConsumer(brokers, groupId string, topics []string) *Consumer {
 	return &Consumer{consumer: c}
 }
 
-func (c *Consumer) PollMessage() {
-	for {
-		msg, err := c.consumer.ReadMessage(-1)
-		if err != nil {
-			log.Printf("Consumer error: %s", err)
-			continue
-		}
-		log.Printf("Message on %s: %s", msg.TopicPartition, string(msg.Value))
+func (c *Consumer) PollMessage() ([]byte, error) {
+	msg, err := c.consumer.ReadMessage(-1)
+	if err != nil {
+		return nil, err
 	}
+	return msg.Value, nil
 }
 
 func (c *Consumer) Close() {

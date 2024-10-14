@@ -1,4 +1,4 @@
-package repository
+package deps
 
 import "github.com/redis/go-redis/v9"
 

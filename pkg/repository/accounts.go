@@ -1,7 +1,9 @@
 package repository
 
 import (
+	"bankingsystem/constants"
 	"bankingsystem/models"
+	"context"
 	"fmt"
 	"time"
 
@@ -21,11 +23,13 @@ func NewAccountRepository(db *pgxpool.Pool, redis *redis.Client) *AccountReposit
 	}
 }
 
+var ctx = context.Background()
+
 func (r *AccountRepository) CreateAccount(input models.CreateAccount) (int, error) {
 
 	var accountId int
 	var balance float64
-	query := fmt.Sprintf("INSERT INTO %s (balance, currency) VALUES ($1, $2) RETURNING id, balance", accountsTable)
+	query := fmt.Sprintf("INSERT INTO %s (balance, currency) VALUES ($1, $2) RETURNING id, balance", constants.AccountsTable)
 	row := r.db.QueryRow(ctx, query, input.Balance, input.Currency)
 	if err := row.Scan(&accountId, &balance); err != nil {
 		return 0, err
@@ -55,7 +59,7 @@ func (r *AccountRepository) CreateAccount(input models.CreateAccount) (int, erro
 func (r *AccountRepository) DeleteAccount(id int) error {
 
 	query := fmt.Sprintf(`
-    UPDATE %s SET deleted_at=NOW() WHERE id=$1`, accountsTable)
+    UPDATE %s SET deleted_at=NOW() WHERE id=$1`, constants.AccountsTable)
 	result, err := r.db.Exec(ctx, query, id)
 	if err != nil {
 		return err
@@ -85,7 +89,7 @@ func (r *AccountRepository) GetAccountById(id int) (models.GetAccount, error) {
 	// }
 
 	// get from postgres db
-	query := fmt.Sprintf("SELECT id, balance, currency, is_locked, created_at FROM %s WHERE id = $1 AND deleted_at IS NULL", accountsTable)
+	query := fmt.Sprintf("SELECT id, balance, currency, is_locked, created_at FROM %s WHERE id = $1 AND deleted_at IS NULL", constants.AccountsTable)
 	row := r.db.QueryRow(ctx, query, id)
 	err := row.Scan(&account.Id, &account.Balance, &account.Currency, &account.IsLocked, &account.CreatedAt)
 	if err != nil {
@@ -116,7 +120,7 @@ func (r *AccountRepository) GetAccountById(id int) (models.GetAccount, error) {
 func (r *AccountRepository) GetAccounts() ([]models.GetAccount, error) {
 	var accounts []models.GetAccount
 
-	query := fmt.Sprintf("SELECT id, balance, currency, is_locked, created_at FROM %s WHERE deleted_at IS NULL", accountsTable)
+	query := fmt.Sprintf("SELECT id, balance, currency, is_locked, created_at FROM %s WHERE deleted_at IS NULL", constants.AccountsTable)
 	rows, err := r.db.Query(ctx, query)
 	if err != nil {
 		return accounts, fmt.Errorf("error getting from database: %s", err)

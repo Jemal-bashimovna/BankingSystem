@@ -22,9 +22,9 @@ func (h *Handler) createAccount(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"status": "ok",
-		"id":     id,
+	ctx.JSON(http.StatusOK, models.CreateAccResponse{
+		Status: "Successfully",
+		Id:     id,
 	})
 }
 
@@ -41,8 +41,8 @@ func (h *Handler) deleteAccount(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"status": "ok",
+	ctx.JSON(http.StatusOK, models.DeleteAccResponse{
+		Status: "Successfully",
 	})
 
 }
@@ -60,8 +60,8 @@ func (h *Handler) getAccount(ctx *gin.Context) {
 		ErrorMessage(ctx, http.StatusInternalServerError, err.Error())
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{
-		"account": account,
+	ctx.JSON(http.StatusOK, models.GetAccResponse{
+		Account: account,
 	})
 }
 
@@ -73,7 +73,7 @@ func (h *Handler) getAllAccounts(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"list": accounts,
+	ctx.JSON(http.StatusOK, models.GetAllAccResponse{
+		Accounts: accounts,
 	})
 }

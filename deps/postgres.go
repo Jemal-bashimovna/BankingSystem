@@ -1,15 +1,10 @@
-package repository
+package deps
 
 import (
 	"context"
 	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-)
-
-const (
-	accountsTable     = "accounts"
-	transactionsTable = "transactions"
 )
 
 type Config struct {
