@@ -12,11 +12,11 @@ import (
 
 type DepositConsumer struct {
 	consumer *deps.Consumer
-	db       *repository.TransactionRepository // repository.TransactionsRepo
+	db       repository.Transactions // repository.TransactionsRepo
 
 }
 
-func NewDepositConsumer(brokers, groupId string, db *repository.TransactionRepository) *DepositConsumer {
+func NewDepositConsumer(brokers, groupId string, db repository.Transactions) *DepositConsumer {
 	depositConsumer := deps.NewConsumer(brokers, groupId, []string{constants.Deposit})
 	return &DepositConsumer{
 		consumer: depositConsumer,
@@ -37,18 +37,27 @@ func (d *DepositConsumer) StartListening() {
 			log.Printf("Failed to unmarshal message: %s", err)
 			continue
 		}
+		if err := validateDeposit(transaction); err != nil {
+			log.Printf("Validation failed: %s", err)
+			continue
+		}
 
-		_, err = d.db.AddDeposit(transaction)
+		id, err := d.db.AddDeposit(transaction)
 		if err != nil {
 			log.Printf("Failed to add deposit: %s", err)
+			return
 		}
 		fmt.Println(transaction)
+		fmt.Printf("Deposit successfully id: %d", id)
 	}
 }
 
-// err = d.createDepositTransaction(transaction)
-// if err != nil {
-// 	log.Printf("Failed to create deposit transaction: %v", err)
-// } else {
-// 	log.Println("Deposit transaction successfully created")
-// }
+func validateDeposit(deposit models.InputDeposit) error {
+	if deposit.Id <= 0 {
+		return fmt.Errorf("invalid account id")
+	}
+	if deposit.DepositSum <= 0 {
+		return fmt.Errorf("deposit amount must be positive")
+	}
+	return nil
+}

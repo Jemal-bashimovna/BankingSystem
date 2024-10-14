@@ -23,7 +23,7 @@ func (h *Handler) deposit(ctx *gin.Context) {
 		return
 	}
 
-	err = h.service.Transactions.Deposit(id, sum)
+	err = h.service.Transactions.DepositProducer(id, sum)
 	if err != nil {
 		ErrorMessage(ctx, http.StatusInternalServerError, err.Error())
 		return
@@ -49,7 +49,7 @@ func (h *Handler) withdraw(ctx *gin.Context) {
 		return
 	}
 
-	err = h.service.Transactions.Withdraw(id, sum)
+	err = h.service.Transactions.WithdrawProducer(id, sum)
 	if err != nil {
 		ErrorMessage(ctx, http.StatusInternalServerError, err.Error())
 		return
@@ -74,7 +74,7 @@ func (h *Handler) transfer(ctx *gin.Context) {
 		return
 	}
 
-	err = h.service.Transactions.Transfer(id, sum)
+	err = h.service.Transactions.TransferProducer(id, sum)
 	if err != nil {
 		ErrorMessage(ctx, http.StatusInternalServerError, err.Error())
 		return

@@ -21,9 +21,23 @@ func NewTransactionService(repo repository.Transactions) *TransactionService {
 	}
 }
 
-func (s *TransactionService) Deposit(id int, sum models.InputDeposit) error {
+func (s *TransactionService) DepositProducer(id int, sum models.InputDeposit) error {
+
+	err := s.repo.IsExistAccount(sum.Id)
+	if err != nil {
+		return err
+	}
+
+	err = s.repo.IsLockedAccount(sum.Id)
+	if err != nil {
+		return err
+	}
+
 	p := deps.NewProducer(viper.GetString("kafka.brokers"))
 	message, err := json.Marshal(sum)
+	if sum.DepositSum <= 0.00 {
+		return fmt.Errorf("deposit sum must be a positive valuse")
+	}
 	if err != nil {
 		return fmt.Errorf("failed sending message to producer: %s", err)
 	}
@@ -36,7 +50,16 @@ func (s *TransactionService) Deposit(id int, sum models.InputDeposit) error {
 	return nil
 }
 
-func (s *TransactionService) Withdraw(id int, sum models.InputWithdraw) error {
+func (s *TransactionService) WithdrawProducer(id int, sum models.InputWithdraw) error {
+
+	// check account
+	err := s.repo.IsExistAccount(sum.Id)
+	if err != nil {
+		return err
+	}
+
+	// check account balance
+
 	p := deps.NewProducer(viper.GetString("kafka.brokers"))
 	message, err := json.Marshal(sum)
 	if err != nil {
@@ -50,7 +73,12 @@ func (s *TransactionService) Withdraw(id int, sum models.InputWithdraw) error {
 	return nil
 }
 
-func (s *TransactionService) Transfer(id int, sum models.InputTransfer) error {
+func (s *TransactionService) TransferProducer(id int, sum models.InputTransfer) error {
+	err := s.repo.IsExistAccount(sum.Id)
+	if err != nil {
+		return err
+	}
+
 	p := deps.NewProducer(viper.GetString("kafka.brokers"))
 	message, err := json.Marshal(sum)
 	if err != nil {

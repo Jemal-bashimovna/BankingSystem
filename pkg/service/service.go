@@ -13,9 +13,9 @@ type Accounts interface {
 }
 
 type Transactions interface {
-	Deposit(id int, sum models.InputDeposit) error
-	Withdraw(id int, sum models.InputWithdraw) error
-	Transfer(id int, sum models.InputTransfer) error
+	DepositProducer(id int, sum models.InputDeposit) error
+	WithdrawProducer(id int, sum models.InputWithdraw) error
+	TransferProducer(id int, sum models.InputTransfer) error
 }
 
 type Service struct {

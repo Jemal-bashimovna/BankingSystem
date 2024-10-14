@@ -16,9 +16,13 @@ type Accounts interface {
 }
 
 type Transactions interface {
-	AddDeposit(deposit models.InputDeposit) error
-	Withdraw(deposit models.InputDeposit) error
-	Transfer(deposit models.InputDeposit) error
+	AddDeposit(deposit models.InputDeposit) (int, error)
+	Withdraw(deposit models.InputWithdraw) (int, error)
+	Transfer(deposit models.InputTransfer) (int, error)
+
+	IsExistAccount(id int) error
+	IsLockedAccount(id int) error
+	CheckBalance(id int) (float64, error)
 }
 
 type Repository struct {
@@ -28,6 +32,7 @@ type Repository struct {
 
 func NewRepository(db *pgxpool.Pool, redis *redis.Client, ctx context.Context) *Repository {
 	return &Repository{
-		Accounts: NewAccountRepository(db, redis),
+		Accounts:     NewAccountRepository(db, redis),
+		Transactions: NewTransactionRepository(db, redis),
 	}
 }

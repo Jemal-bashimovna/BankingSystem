@@ -36,13 +36,14 @@ func (w *WithdrawConsumer) StartListening() {
 			continue
 		}
 
-		// err = d.createDepositTransaction(transaction)
-		// if err != nil {
-		// 	log.Printf("Failed to create deposit transaction: %v", err)
-		// } else {
-		// 	log.Println("Deposit transaction successfully created")
-		// }
-
+		id, err := w.db.Withdraw(transaction)
+		if err != nil {
+			log.Printf("error withdrawing money from account: %s", err)
+			return
+		}
 		fmt.Println(transaction)
+		fmt.Printf("withdrawing money successfully from: %d\n", transaction.Id)
+
+		fmt.Println(id)
 	}
 }
