@@ -12,23 +12,27 @@ import (
 
 type TransferConsumer struct {
 	consumer *deps.Consumer
-	db       *repository.Repository // repository.TransactionsRepo
+	db       *repository.TransactionRepository
 }
 
-func NewTransferConsumer(brokers, groupId string, depostsConsumer *deps.Consumer, db *repository.Repository) *TransferConsumer {
-	deps.NewConsumer(brokers, groupId, []string{constants.Transfer})
-	return &TransferConsumer{consumer: depostsConsumer, db: db}
+func NewTransferConsumer(brokers, groupId string, db *repository.TransactionRepository) *TransferConsumer {
+	transferConsumer := deps.NewConsumer(brokers, groupId, []string{constants.Transfer})
+	return &TransferConsumer{
+		consumer: transferConsumer,
+		db:       db,
+	}
 }
 
-func (d *TransferConsumer) StartListening() {
+func (t *TransferConsumer) StartListening() {
 	for {
-		msg, err := d.consumer.PollMessage()
+		msg, err := t.consumer.PollMessage()
 		if err != nil {
 			log.Printf("Failed to read message: %v", err)
 			continue
 		}
+
 		var transaction models.InputTransfer
-		if err := json.Unmarshal(msg, &transaction); err != nil {
+		if err := json.Unmarshal(msg.Value, &transaction); err != nil {
 			log.Printf("Failed to unmarshal message: %v", err)
 			continue
 		}
@@ -39,7 +43,7 @@ func (d *TransferConsumer) StartListening() {
 		// } else {
 		// 	log.Println("Deposit transaction successfully created")
 		// }
-		d.db.Transactions.AddDeposit()
+
 		fmt.Println(transaction)
 	}
 }

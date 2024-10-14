@@ -12,44 +12,43 @@ import (
 
 type DepositConsumer struct {
 	consumer *deps.Consumer
-	db       *repository.Repository // repository.TransactionsRepo
+	db       *repository.TransactionRepository // repository.TransactionsRepo
+
 }
 
-func NewDepositConsumer(brokers, groupId string, depostsConsumer *deps.Consumer, db *repository.Repository) *DepositConsumer {
-	deps.NewConsumer(brokers, groupId, []string{constants.Deposit})
-	return &DepositConsumer{consumer: depostsConsumer, db: db}
+func NewDepositConsumer(brokers, groupId string, db *repository.TransactionRepository) *DepositConsumer {
+	depositConsumer := deps.NewConsumer(brokers, groupId, []string{constants.Deposit})
+	return &DepositConsumer{
+		consumer: depositConsumer,
+		db:       db,
+	}
 }
 
 func (d *DepositConsumer) StartListening() {
 	for {
 		msg, err := d.consumer.PollMessage()
 		if err != nil {
-			log.Printf("Failed to read message: %v", err)
-			continue
-		}
-		var transaction models.InputDeposit
-		if err := json.Unmarshal(msg, &transaction); err != nil {
-			log.Printf("Failed to unmarshal message: %v", err)
+			log.Printf("Failed to read message: %s", err)
 			continue
 		}
 
-		// err = d.createDepositTransaction(transaction)
-		// if err != nil {
-		// 	log.Printf("Failed to create deposit transaction: %v", err)
-		// } else {
-		// 	log.Println("Deposit transaction successfully created")
-		// }
-		d.db.Transactions.AddDeposit()
+		var transaction models.InputDeposit
+		if err := json.Unmarshal(msg.Value, &transaction); err != nil {
+			log.Printf("Failed to unmarshal message: %s", err)
+			continue
+		}
+
+		_, err = d.db.AddDeposit(transaction)
+		if err != nil {
+			log.Printf("Failed to add deposit: %s", err)
+		}
 		fmt.Println(transaction)
 	}
 }
 
-// func (d *DepositConsumer) createDepositTransaction(deposit models.InputDeposit) error {
-// 	ctx := context.Background()
-// 	_, err := d.db.Exec(ctx, "INSERT INTO transactions (account_id, amount, transaction_type, created_at) VALUES ($1, $2, 'deposit', NOW())",
-// 		deposit.Id, deposit.DepositSum)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return nil
+// err = d.createDepositTransaction(transaction)
+// if err != nil {
+// 	log.Printf("Failed to create deposit transaction: %v", err)
+// } else {
+// 	log.Println("Deposit transaction successfully created")
 // }

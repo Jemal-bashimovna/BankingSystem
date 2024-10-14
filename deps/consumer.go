@@ -26,12 +26,12 @@ func NewConsumer(brokers, groupId string, topics []string) *Consumer {
 	return &Consumer{consumer: c}
 }
 
-func (c *Consumer) PollMessage() ([]byte, error) {
+func (c *Consumer) PollMessage() (*kafka.Message, error) {
 	msg, err := c.consumer.ReadMessage(-1)
 	if err != nil {
 		return nil, err
 	}
-	return msg.Value, nil
+	return msg, nil
 }
 
 func (c *Consumer) Close() {

@@ -16,8 +16,9 @@ type Accounts interface {
 }
 
 type Transactions interface {
-	AddDeposit()
-	//...
+	AddDeposit(deposit models.InputDeposit) error
+	Withdraw(deposit models.InputDeposit) error
+	Transfer(deposit models.InputDeposit) error
 }
 
 type Repository struct {

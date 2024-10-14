@@ -1,4 +1,4 @@
-package repository
+package deps
 
 import (
 	"log"
@@ -32,7 +32,7 @@ func (p *Producer) SendMessage(message []byte, topic string) error {
 		return err
 	}
 
-	e := <-deliveryChan // Wait for delivery report
+	e := <-deliveryChan
 	m := e.(*kafka.Message)
 
 	if m.TopicPartition.Error != nil {

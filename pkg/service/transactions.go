@@ -1,18 +1,14 @@
 package service
 
 import (
+	"bankingsystem/constants"
+	"bankingsystem/deps"
 	"bankingsystem/models"
 	"bankingsystem/pkg/repository"
 	"encoding/json"
 	"fmt"
 
 	"github.com/spf13/viper"
-)
-
-const (
-	deposit  = "account-deposit"
-	withdraw = "account-withdraw"
-	transfer = "account-transfer"
 )
 
 type TransactionService struct {
@@ -26,12 +22,12 @@ func NewTransactionService(repo repository.Transactions) *TransactionService {
 }
 
 func (s *TransactionService) Deposit(id int, sum models.InputDeposit) error {
-	p := repository.NewProducer(viper.GetString("kafka.brokers"))
+	p := deps.NewProducer(viper.GetString("kafka.brokers"))
 	message, err := json.Marshal(sum)
 	if err != nil {
 		return fmt.Errorf("failed sending message to producer: %s", err)
 	}
-	err = p.SendMessage([]byte(message), deposit)
+	err = p.SendMessage([]byte(message), constants.Deposit)
 
 	if err != nil {
 		return fmt.Errorf("failed sending message to producer: %s", err)
@@ -41,12 +37,12 @@ func (s *TransactionService) Deposit(id int, sum models.InputDeposit) error {
 }
 
 func (s *TransactionService) Withdraw(id int, sum models.InputWithdraw) error {
-	p := repository.NewProducer(viper.GetString("kafka.brokers"))
+	p := deps.NewProducer(viper.GetString("kafka.brokers"))
 	message, err := json.Marshal(sum)
 	if err != nil {
 		return fmt.Errorf("failed sending message to producer: %s", err)
 	}
-	err = p.SendMessage([]byte(message), withdraw)
+	err = p.SendMessage([]byte(message), constants.Withdraw)
 	if err != nil {
 		return fmt.Errorf("failed sending message to producer: %s", err)
 	}
@@ -55,12 +51,12 @@ func (s *TransactionService) Withdraw(id int, sum models.InputWithdraw) error {
 }
 
 func (s *TransactionService) Transfer(id int, sum models.InputTransfer) error {
-	p := repository.NewProducer(viper.GetString("kafka.brokers"))
+	p := deps.NewProducer(viper.GetString("kafka.brokers"))
 	message, err := json.Marshal(sum)
 	if err != nil {
 		return fmt.Errorf("failed sending message to producer: %s", err)
 	}
-	err = p.SendMessage([]byte(message), transfer)
+	err = p.SendMessage([]byte(message), constants.Transfer)
 	if err != nil {
 		return fmt.Errorf("failed sending message to producer: %s", err)
 	}

@@ -12,23 +12,26 @@ import (
 
 type WithdrawConsumer struct {
 	consumer *deps.Consumer
-	db       *repository.Repository // repository.TransactionsRepo
+	db       *repository.TransactionRepository
 }
 
-func NewWithdrawConsumer(brokers, groupId string, depostsConsumer *deps.Consumer, db *repository.Repository) *WithdrawConsumer {
-	deps.NewConsumer(brokers, groupId, []string{constants.Withdraw})
-	return &WithdrawConsumer{consumer: depostsConsumer, db: db}
+func NewWithdrawConsumer(brokers, groupId string, db *repository.TransactionRepository) *WithdrawConsumer {
+	withdrawConsumer := deps.NewConsumer(brokers, groupId, []string{constants.Withdraw})
+	return &WithdrawConsumer{
+		consumer: withdrawConsumer,
+		db:       db,
+	}
 }
 
-func (d *WithdrawConsumer) StartListening() {
+func (w *WithdrawConsumer) StartListening() {
 	for {
-		msg, err := d.consumer.PollMessage()
+		msg, err := w.consumer.PollMessage()
 		if err != nil {
 			log.Printf("Failed to read message: %v", err)
 			continue
 		}
 		var transaction models.InputWithdraw
-		if err := json.Unmarshal(msg, &transaction); err != nil {
+		if err := json.Unmarshal(msg.Value, &transaction); err != nil {
 			log.Printf("Failed to unmarshal message: %v", err)
 			continue
 		}
@@ -39,7 +42,7 @@ func (d *WithdrawConsumer) StartListening() {
 		// } else {
 		// 	log.Println("Deposit transaction successfully created")
 		// }
-		d.db.Transactions.AddDeposit()
+
 		fmt.Println(transaction)
 	}
 }
