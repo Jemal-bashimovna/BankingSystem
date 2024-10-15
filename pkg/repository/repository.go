@@ -19,6 +19,7 @@ type Transactions interface {
 	AddDeposit(deposit models.InputDeposit) (int, error)
 	Withdraw(deposit models.InputWithdraw) (int, error)
 	Transfer(deposit models.InputTransfer) (int, error)
+	GetAll(id int) ([]models.GetTransactions, error)
 
 	IsExistAccount(id int) error
 	IsLockedAccount(id int) error

@@ -44,11 +44,10 @@ func (d *DepositConsumer) StartListening() {
 
 		id, err := d.db.AddDeposit(transaction)
 		if err != nil {
-			log.Printf("Failed to add deposit: %s", err)
-			return
+			log.Fatalf("Failed to add deposit: %s", err)
 		}
-		fmt.Println(transaction)
-		fmt.Printf("Deposit successfully id: %d", id)
+
+		log.Printf("Deposit to account: %d successfully id: %d", transaction.Id, id)
 	}
 }
 

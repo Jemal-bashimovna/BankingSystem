@@ -16,6 +16,7 @@ type Transactions interface {
 	DepositProducer(id int, sum models.InputDeposit) error
 	WithdrawProducer(id int, sum models.InputWithdraw) error
 	TransferProducer(id int, sum models.InputTransfer) error
+	GetAll(id int) ([]models.GetTransactions, error)
 }
 
 type Service struct {

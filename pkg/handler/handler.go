@@ -26,7 +26,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		api.POST("/:account_id/deposit", h.deposit)
 		api.POST("/:account_id/withdraw", h.withdraw)
 		api.POST("/:account_id/transfer", h.transfer)
-		api.POST("/:account_id/transactions", h.transactions)
+		api.GET("/:account_id/transactions", h.transactions)
 	}
 	return router
 }

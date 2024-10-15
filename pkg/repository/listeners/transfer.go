@@ -37,13 +37,29 @@ func (t *TransferConsumer) StartListening() {
 			continue
 		}
 
-		// err = d.createDepositTransaction(transaction)
-		// if err != nil {
-		// 	log.Printf("Failed to create deposit transaction: %v", err)
-		// } else {
-		// 	log.Println("Deposit transaction successfully created")
-		// }
+		if err := validateTransfer(transaction); err != nil {
+			log.Printf("Validation failed: %s", err)
+			continue
+		}
 
-		fmt.Println(transaction)
+		id, err := t.db.Transfer(transaction)
+		if err != nil {
+			log.Fatalf("Failed to transfer: %v", err)
+		}
+
+		log.Printf("The transfer %f from: %d to %d was successfully: %d", transaction.TransferSum, transaction.Id, transaction.TargetId, id)
 	}
+}
+
+func validateTransfer(transfer models.InputTransfer) error {
+	if transfer.Id <= 0 {
+		return fmt.Errorf("invalid account id")
+	}
+	if transfer.TargetId <= 0 {
+		return fmt.Errorf("invalid target account id")
+	}
+	if transfer.TransferSum <= 0 {
+		return fmt.Errorf("withdraw amount must be positive")
+	}
+	return nil
 }
