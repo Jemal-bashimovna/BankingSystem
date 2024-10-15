@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bankingsystem/constants"
 	"bankingsystem/deps"
 	"bankingsystem/pkg/repository"
 	"bankingsystem/pkg/repository/listeners"
@@ -44,9 +45,13 @@ func main() {
 	brokers := viper.GetString("kafka.brokers")
 	groupId := "banking-system-consumer"
 
-	depositConsumer := listeners.NewDepositConsumer(brokers, groupId, transactionRepo)
-	withdrawConsumer := listeners.NewWithdrawConsumer(brokers, groupId, transactionRepo)
-	transferConsumer := listeners.NewTransferConsumer(brokers, groupId, transactionRepo)
+	depCons := deps.NewConsumer(brokers, groupId, []string{constants.Deposit})
+	transCons := deps.NewConsumer(brokers, groupId, []string{constants.Transfer})
+	withdrawCons := deps.NewConsumer(brokers, groupId, []string{constants.Withdraw})
+
+	depositConsumer := listeners.NewDepositConsumer(depCons, groupId, transactionRepo)
+	withdrawConsumer := listeners.NewWithdrawConsumer(withdrawCons, groupId, transactionRepo)
+	transferConsumer := listeners.NewTransferConsumer(transCons, groupId, transactionRepo)
 
 	go depositConsumer.StartListening()
 	go withdrawConsumer.StartListening()

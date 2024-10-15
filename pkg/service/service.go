@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bankingsystem/deps"
 	"bankingsystem/models"
 	"bankingsystem/pkg/repository"
 )
@@ -24,9 +25,9 @@ type Service struct {
 	Transactions
 }
 
-func NewService(repo *repository.Repository) *Service {
+func NewService(repo *repository.Repository, producer *deps.Producer) *Service {
 	return &Service{
 		Accounts:     NewAccountService(repo.Accounts),
-		Transactions: NewTransactionService(repo),
+		Transactions: NewTransactionService(repo, producer),
 	}
 }

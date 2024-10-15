@@ -1,7 +1,6 @@
 package listeners
 
 import (
-	"bankingsystem/constants"
 	"bankingsystem/deps"
 	"bankingsystem/models"
 	"bankingsystem/pkg/repository"
@@ -12,15 +11,14 @@ import (
 
 type DepositConsumer struct {
 	consumer *deps.Consumer
-	db       repository.Transactions // repository.TransactionsRepo
+	repo     repository.Transactions // repository.TransactionsRepo
 
 }
 
-func NewDepositConsumer(brokers, groupId string, db repository.Transactions) *DepositConsumer {
-	depositConsumer := deps.NewConsumer(brokers, groupId, []string{constants.Deposit})
+func NewDepositConsumer(depositConsumer *deps.Consumer, groupId string, repo repository.Transactions) *DepositConsumer {
 	return &DepositConsumer{
 		consumer: depositConsumer,
-		db:       db,
+		repo:     repo,
 	}
 }
 
@@ -29,20 +27,20 @@ func (d *DepositConsumer) StartListening() {
 		msg, err := d.consumer.PollMessage()
 		if err != nil {
 			log.Printf("Failed to read message: %s", err)
-			continue
+			break
 		}
 
 		var transaction models.InputDeposit
 		if err := json.Unmarshal(msg.Value, &transaction); err != nil {
 			log.Printf("Failed to unmarshal message: %s", err)
-			continue
+			break
 		}
 		if err := validateDeposit(transaction); err != nil {
 			log.Printf("Validation failed: %s", err)
 			continue
 		}
 
-		id, err := d.db.AddDeposit(transaction)
+		id, err := d.repo.AddDeposit(transaction)
 		if err != nil {
 			log.Fatalf("Failed to add deposit: %s", err)
 		}

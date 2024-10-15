@@ -1,7 +1,6 @@
 package listeners
 
 import (
-	"bankingsystem/constants"
 	"bankingsystem/deps"
 	"bankingsystem/models"
 	"bankingsystem/pkg/repository"
@@ -12,14 +11,13 @@ import (
 
 type TransferConsumer struct {
 	consumer *deps.Consumer
-	db       *repository.TransactionRepository
+	repo     repository.Transactions
 }
 
-func NewTransferConsumer(brokers, groupId string, db *repository.TransactionRepository) *TransferConsumer {
-	transferConsumer := deps.NewConsumer(brokers, groupId, []string{constants.Transfer})
+func NewTransferConsumer(transferConsumer *deps.Consumer, groupId string, repo repository.Transactions) *TransferConsumer {
 	return &TransferConsumer{
 		consumer: transferConsumer,
-		db:       db,
+		repo:     repo,
 	}
 }
 
@@ -42,7 +40,7 @@ func (t *TransferConsumer) StartListening() {
 			continue
 		}
 
-		id, err := t.db.Transfer(transaction)
+		id, err := t.repo.Transfer(transaction)
 		if err != nil {
 			log.Fatalf("Failed to transfer: %v", err)
 		}

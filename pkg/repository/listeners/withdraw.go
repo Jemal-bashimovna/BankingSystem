@@ -1,7 +1,6 @@
 package listeners
 
 import (
-	"bankingsystem/constants"
 	"bankingsystem/deps"
 	"bankingsystem/models"
 	"bankingsystem/pkg/repository"
@@ -12,14 +11,13 @@ import (
 
 type WithdrawConsumer struct {
 	consumer *deps.Consumer
-	db       *repository.TransactionRepository
+	repo     repository.Transactions
 }
 
-func NewWithdrawConsumer(brokers, groupId string, db *repository.TransactionRepository) *WithdrawConsumer {
-	withdrawConsumer := deps.NewConsumer(brokers, groupId, []string{constants.Withdraw})
+func NewWithdrawConsumer(withdrawConsumer *deps.Consumer, groupId string, repo repository.Transactions) *WithdrawConsumer {
 	return &WithdrawConsumer{
 		consumer: withdrawConsumer,
-		db:       db,
+		repo:     repo,
 	}
 }
 
@@ -41,12 +39,12 @@ func (w *WithdrawConsumer) StartListening() {
 			continue
 		}
 
-		_, err = w.db.Withdraw(transaction)
+		_, err = w.repo.Withdraw(transaction)
 		if err != nil {
 			log.Fatalf("error withdrawing money from account: %s", err)
 		}
 
-		log.Printf("withdrawing money (%f) successfully from account: %d\n", transaction.WithDrawSum, transaction.Id)
+		log.Printf("withdrawing money (%.2f) successfully from account: %d\n", transaction.WithDrawSum, transaction.Id)
 
 	}
 }

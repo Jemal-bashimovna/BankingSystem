@@ -289,7 +289,8 @@ func (t *TransactionRepository) CheckBalance(id int) (float64, error) {
 
 func (r *TransactionRepository) GetAll(id int) ([]models.GetTransactions, error) {
 	var cursor uint64
-	var transactions []models.GetTransactions
+	transactions := []models.GetTransactions{}
+
 	cacheKey := fmt.Sprintf("transaction:%d:*", id)
 
 	for {
@@ -297,6 +298,7 @@ func (r *TransactionRepository) GetAll(id int) ([]models.GetTransactions, error)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan transaction keys from cache: %s", err)
 		}
+
 		for _, key := range keys {
 
 			data, err := r.redis.HGetAll(ctx, key).Result()
@@ -326,7 +328,7 @@ func (r *TransactionRepository) GetAll(id int) ([]models.GetTransactions, error)
 
 			// convert date to time.Time
 			if dateStr, ok := data["date"]; ok {
-				transaction.CreatedAt, err = time.Parse(time.RFC3339, dateStr)
+				transaction.CreatedAt, err = time.Parse(time.DateTime, dateStr)
 				if err != nil {
 					return nil, fmt.Errorf("failed to parse date: %v", err)
 				}
@@ -341,6 +343,10 @@ func (r *TransactionRepository) GetAll(id int) ([]models.GetTransactions, error)
 			break
 		}
 		cursor = newCursor
+	}
+
+	if len(transactions) != 0 {
+		return transactions, nil
 	}
 
 	query := fmt.Sprintf("select id, amount, transaction_type, created_at from %s where account_id=$1", constants.TransactionsTable)

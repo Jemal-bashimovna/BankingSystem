@@ -7,17 +7,17 @@ import (
 	"bankingsystem/pkg/repository"
 	"encoding/json"
 	"fmt"
-
-	"github.com/spf13/viper"
 )
 
 type TransactionService struct {
-	repo repository.Transactions
+	repo     repository.Transactions
+	producer *deps.Producer
 }
 
-func NewTransactionService(repo repository.Transactions) *TransactionService {
+func NewTransactionService(repo repository.Transactions, producer *deps.Producer) *TransactionService {
 	return &TransactionService{
-		repo: repo,
+		repo:     repo,
+		producer: producer,
 	}
 }
 
@@ -33,7 +33,6 @@ func (s *TransactionService) DepositProducer(id int, sum models.InputDeposit) er
 		return err
 	}
 
-	p := deps.NewProducer(viper.GetString("kafka.brokers"))
 	message, err := json.Marshal(sum)
 	if sum.DepositSum <= 0.00 {
 		return fmt.Errorf("deposit sum must be a positive valuse")
@@ -41,12 +40,11 @@ func (s *TransactionService) DepositProducer(id int, sum models.InputDeposit) er
 	if err != nil {
 		return fmt.Errorf("failed sending message to producer: %s", err)
 	}
-	err = p.SendMessage([]byte(message), constants.Deposit)
+	err = s.producer.SendMessage([]byte(message), constants.Deposit)
 
 	if err != nil {
 		return fmt.Errorf("failed sending message to producer: %s", err)
 	}
-	defer p.Close()
 	return nil
 }
 
@@ -73,16 +71,14 @@ func (s *TransactionService) WithdrawProducer(id int, sum models.InputWithdraw) 
 	}
 	// check account balance
 
-	p := deps.NewProducer(viper.GetString("kafka.brokers"))
 	message, err := json.Marshal(sum)
 	if err != nil {
 		return fmt.Errorf("failed sending message to producer: %s", err)
 	}
-	err = p.SendMessage([]byte(message), constants.Withdraw)
+	err = s.producer.SendMessage([]byte(message), constants.Withdraw)
 	if err != nil {
 		return fmt.Errorf("failed sending message to producer: %s", err)
 	}
-	defer p.Close()
 	return nil
 }
 
@@ -119,16 +115,14 @@ func (s *TransactionService) TransferProducer(id int, sum models.InputTransfer) 
 		return err
 	}
 
-	p := deps.NewProducer(viper.GetString("kafka.brokers"))
 	message, err := json.Marshal(sum)
 	if err != nil {
 		return fmt.Errorf("failed sending message to producer: %s", err)
 	}
-	err = p.SendMessage([]byte(message), constants.Transfer)
+	err = s.producer.SendMessage([]byte(message), constants.Transfer)
 	if err != nil {
 		return fmt.Errorf("failed sending message to producer: %s", err)
 	}
-	defer p.Close()
 	return nil
 }
 

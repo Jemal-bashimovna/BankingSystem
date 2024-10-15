@@ -8,15 +8,18 @@ import (
 	"bankingsystem/pkg/service"
 	"context"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
-var ctx = context.Background()
-
 func main() {
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	if err := initConfig(); err != nil {
 		logrus.Fatalf("Error initializing configs: %s", err)
@@ -45,15 +48,38 @@ func main() {
 		DB:       viper.GetInt("redis.db"),
 	})
 
+	producer := deps.NewProducer(viper.GetString("kafka.brokers"))
+
 	repo := repository.NewRepository(db, rdb, ctx)
-	services := service.NewService(repo)
+	services := service.NewService(repo, producer)
 	handlers := handler.NewHandler(services)
 
 	srv := new(server.Server)
+	go func() {
+		if err := srv.Run(viper.GetString("port"), handlers.InitRoutes()); err != nil {
+			logrus.Fatalf("Error running server: %s", err)
+		}
+	}()
 
-	if err := srv.Run(viper.GetString("port"), handlers.InitRoutes()); err != nil {
-		logrus.Fatalf("Error running server: %s", err)
+	logrus.Print("BankingSystem Started")
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
+	<-quit
+
+	logrus.Print("BankingSystem Shutting Down")
+
+	if err := srv.ShutDown(ctx); err != nil {
+		logrus.Errorf("error occured on server shutting down: %s", err.Error())
 	}
+
+	db.Close()
+
+	if err := rdb.Close(); err != nil {
+		logrus.Errorf("Error closing Redis connection: %s", err)
+	}
+
+	producer.Close()
 }
 
 func initConfig() error {
