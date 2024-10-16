@@ -45,12 +45,12 @@ func (d *DepositConsumer) StartListening() {
 			log.Fatalf("Failed to add deposit: %s", err)
 		}
 
-		log.Printf("Deposit to account: %d successfully id: %d", transaction.Id, id)
+		log.Printf("Deposit to account: %d successfully id: %d", transaction.AccountId, id)
 	}
 }
 
 func validateDeposit(deposit models.InputDeposit) error {
-	if deposit.Id <= 0 {
+	if deposit.AccountId <= 0 {
 		return fmt.Errorf("invalid account id")
 	}
 	if deposit.DepositSum <= 0 {

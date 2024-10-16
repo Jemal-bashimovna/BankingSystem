@@ -44,13 +44,13 @@ func (w *WithdrawConsumer) StartListening() {
 			log.Fatalf("error withdrawing money from account: %s", err)
 		}
 
-		log.Printf("withdrawing money (%.2f) successfully from account: %d\n", transaction.WithDrawSum, transaction.Id)
+		log.Printf("withdrawing money (%.2f) successfully from account: %d\n", transaction.WithDrawSum, transaction.AccountId)
 
 	}
 }
 
 func validateWithdraw(withdraw models.InputWithdraw) error {
-	if withdraw.Id <= 0 {
+	if withdraw.AccountId <= 0 {
 		return fmt.Errorf("invalid account id")
 	}
 	if withdraw.WithDrawSum <= 0 {

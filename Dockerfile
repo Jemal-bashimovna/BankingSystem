@@ -1,4 +1,4 @@
-FROM golang:1.20 AS builder
+FROM golang:1.22 AS builder
 
 WORKDIR /app
 
@@ -7,7 +7,8 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o myapp .
+RUN go build -o myapp ./cmd
+
 
 FROM alpine:latest
 

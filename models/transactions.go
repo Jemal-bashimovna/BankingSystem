@@ -3,17 +3,17 @@ package models
 import "time"
 
 type InputDeposit struct {
-	Id         int     `json:"id"`
+	AccountId  int     `json:"account_id"`
 	DepositSum float64 `json:"sum"`
 }
 
 type InputWithdraw struct {
-	Id          int     `json:"id"`
+	AccountId   int     `json:"account_id"`
 	WithDrawSum float64 `json:"sum"`
 }
 
 type InputTransfer struct {
-	Id          int     `json:"id"`
+	AccountId   int     `json:"account_id"`
 	TargetId    int     `json:"target_id"`
 	TransferSum float64 `json:"sum"`
 }

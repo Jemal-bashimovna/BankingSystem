@@ -21,20 +21,20 @@ func NewTransactionService(repo repository.Transactions, producer *deps.Producer
 	}
 }
 
-func (s *TransactionService) DepositProducer(id int, sum models.InputDeposit) error {
+func (s *TransactionService) DepositProducer(id int, input models.InputDeposit) error {
 
-	err := s.repo.IsExistAccount(sum.Id)
+	err := s.repo.IsExistAccount(input.AccountId)
 	if err != nil {
 		return err
 	}
 
-	err = s.repo.IsLockedAccount(sum.Id)
+	err = s.repo.IsLockedAccount(input.AccountId)
 	if err != nil {
 		return err
 	}
 
-	message, err := json.Marshal(sum)
-	if sum.DepositSum <= 0.00 {
+	message, err := json.Marshal(input)
+	if input.DepositSum <= 0.00 {
 		return fmt.Errorf("deposit sum must be a positive valuse")
 	}
 	if err != nil {
@@ -48,30 +48,30 @@ func (s *TransactionService) DepositProducer(id int, sum models.InputDeposit) er
 	return nil
 }
 
-func (s *TransactionService) WithdrawProducer(id int, sum models.InputWithdraw) error {
+func (s *TransactionService) WithdrawProducer(id int, input models.InputWithdraw) error {
 
 	// check account
-	err := s.repo.IsExistAccount(sum.Id)
+	err := s.repo.IsExistAccount(input.AccountId)
 	if err != nil {
 		return err
 	}
 
-	err = s.repo.IsLockedAccount(sum.Id)
+	err = s.repo.IsLockedAccount(input.AccountId)
 	if err != nil {
 		return err
 	}
 
-	balance, err := s.repo.CheckBalance(sum.Id)
+	balance, err := s.repo.CheckBalance(input.AccountId)
 	if err != nil {
 		return err
 	}
 
-	if sum.WithDrawSum > balance {
+	if input.WithDrawSum > balance {
 		return fmt.Errorf("there are not enough funds in the account")
 	}
 	// check account balance
 
-	message, err := json.Marshal(sum)
+	message, err := json.Marshal(input)
 	if err != nil {
 		return fmt.Errorf("failed sending message to producer: %s", err)
 	}
@@ -82,40 +82,40 @@ func (s *TransactionService) WithdrawProducer(id int, sum models.InputWithdraw) 
 	return nil
 }
 
-func (s *TransactionService) TransferProducer(id int, sum models.InputTransfer) error {
+func (s *TransactionService) TransferProducer(id int, input models.InputTransfer) error {
 
 	// check account
-	err := s.repo.IsExistAccount(sum.Id)
+	err := s.repo.IsExistAccount(input.AccountId)
 	if err != nil {
 		return err
 	}
 
-	err = s.repo.IsLockedAccount(sum.Id)
+	err = s.repo.IsLockedAccount(input.AccountId)
 	if err != nil {
 		return err
 	}
 
-	balance, err := s.repo.CheckBalance(sum.Id)
+	balance, err := s.repo.CheckBalance(input.AccountId)
 	if err != nil {
 		return err
 	}
 
-	if sum.TransferSum > balance {
+	if input.TransferSum > balance {
 		return fmt.Errorf("there are not enough funds in the account")
 	}
 
 	// check target account
-	err = s.repo.IsExistAccount(sum.TargetId)
+	err = s.repo.IsExistAccount(input.TargetId)
 	if err != nil {
 		return err
 	}
 
-	err = s.repo.IsLockedAccount(sum.TargetId)
+	err = s.repo.IsLockedAccount(input.TargetId)
 	if err != nil {
 		return err
 	}
 
-	message, err := json.Marshal(sum)
+	message, err := json.Marshal(input)
 	if err != nil {
 		return fmt.Errorf("failed sending message to producer: %s", err)
 	}

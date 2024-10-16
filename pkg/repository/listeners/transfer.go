@@ -45,12 +45,12 @@ func (t *TransferConsumer) StartListening() {
 			log.Fatalf("Failed to transfer: %v", err)
 		}
 
-		log.Printf("The transfer %f from: %d to %d was successfully: %d", transaction.TransferSum, transaction.Id, transaction.TargetId, id)
+		log.Printf("The transfer %f from: %d to %d was successfully: %d", transaction.TransferSum, transaction.AccountId, transaction.TargetId, id)
 	}
 }
 
 func validateTransfer(transfer models.InputTransfer) error {
-	if transfer.Id <= 0 {
+	if transfer.AccountId <= 0 {
 		return fmt.Errorf("invalid account id")
 	}
 	if transfer.TargetId <= 0 {

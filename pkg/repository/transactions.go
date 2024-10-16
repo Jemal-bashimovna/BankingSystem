@@ -25,17 +25,17 @@ func NewTransactionRepository(db *pgxpool.Pool, redis *redis.Client) *Transactio
 
 func (t *TransactionRepository) AddDeposit(deposit models.InputDeposit) (int, error) {
 
-	err := t.IsExistAccount(deposit.Id)
+	err := t.IsExistAccount(deposit.AccountId)
 	if err != nil {
 		return 0, err
 	}
 
-	err = t.IsLockedAccount(deposit.Id)
+	err = t.IsLockedAccount(deposit.AccountId)
 	if err != nil {
 		return 0, err
 	}
 
-	balance, err := t.CheckBalance(deposit.Id)
+	balance, err := t.CheckBalance(deposit.AccountId)
 	if err != nil {
 		return 0, err
 	}
@@ -47,7 +47,7 @@ func (t *TransactionRepository) AddDeposit(deposit models.InputDeposit) (int, er
 	newBalance := balance + deposit.DepositSum
 
 	query := fmt.Sprintf("update %s set balance=$1 where id=$2", constants.AccountsTable)
-	_, err = tx.Exec(ctx, query, newBalance, deposit.Id)
+	_, err = tx.Exec(ctx, query, newBalance, deposit.AccountId)
 	if err != nil {
 		tx.Rollback(ctx)
 		return 0, err
@@ -55,7 +55,7 @@ func (t *TransactionRepository) AddDeposit(deposit models.InputDeposit) (int, er
 
 	var transactionId int
 	transactionQuery := fmt.Sprintf("INSERT INTO %s (account_id, amount, transaction_type) VALUES ($1, $2, $3) RETURNING id", constants.TransactionsTable)
-	row := tx.QueryRow(ctx, transactionQuery, deposit.Id, deposit.DepositSum, constants.Deposit)
+	row := tx.QueryRow(ctx, transactionQuery, deposit.AccountId, deposit.DepositSum, constants.Deposit)
 
 	if err := row.Scan(&transactionId); err != nil {
 		return 0, err
@@ -73,7 +73,7 @@ func (t *TransactionRepository) AddDeposit(deposit models.InputDeposit) (int, er
 		"date":   time.Now(),
 	}
 
-	cacheKey := fmt.Sprintf("transaction:%d:%d", deposit.Id, transactionId)
+	cacheKey := fmt.Sprintf("transaction:%d:%d", deposit.AccountId, transactionId)
 
 	err = t.redis.HSet(ctx, cacheKey, cacheData).Err()
 	if err != nil {
@@ -90,17 +90,17 @@ func (t *TransactionRepository) AddDeposit(deposit models.InputDeposit) (int, er
 
 func (t *TransactionRepository) Withdraw(withdraw models.InputWithdraw) (int, error) {
 
-	err := t.IsExistAccount(withdraw.Id)
+	err := t.IsExistAccount(withdraw.AccountId)
 	if err != nil {
 		return 0, err
 	}
 
-	err = t.IsLockedAccount(withdraw.Id)
+	err = t.IsLockedAccount(withdraw.AccountId)
 	if err != nil {
 		return 0, err
 	}
 
-	balance, err := t.CheckBalance(withdraw.Id)
+	balance, err := t.CheckBalance(withdraw.AccountId)
 	if err != nil {
 		return 0, err
 	}
@@ -116,7 +116,7 @@ func (t *TransactionRepository) Withdraw(withdraw models.InputWithdraw) (int, er
 	newBalance := balance - withdraw.WithDrawSum
 
 	query := fmt.Sprintf("update %s set balance = $1 where id=$2", constants.AccountsTable)
-	_, err = tx.Exec(ctx, query, newBalance, withdraw.Id)
+	_, err = tx.Exec(ctx, query, newBalance, withdraw.AccountId)
 	if err != nil {
 		tx.Rollback(ctx)
 		return 0, err
@@ -124,7 +124,7 @@ func (t *TransactionRepository) Withdraw(withdraw models.InputWithdraw) (int, er
 
 	queryTransaction := fmt.Sprintf("insert into %s (account_id, amount, transaction_type) values ($1, $2, $3) returning id", constants.TransactionsTable)
 	var transactionId int
-	row := tx.QueryRow(ctx, queryTransaction, withdraw.Id, withdraw.WithDrawSum, constants.Withdraw)
+	row := tx.QueryRow(ctx, queryTransaction, withdraw.AccountId, withdraw.WithDrawSum, constants.Withdraw)
 	if err := row.Scan(&transactionId); err != nil {
 		tx.Rollback(ctx)
 		return 0, fmt.Errorf("failed to create transaction record: %v", err)
@@ -140,7 +140,7 @@ func (t *TransactionRepository) Withdraw(withdraw models.InputWithdraw) (int, er
 		"type":   constants.Withdraw,
 		"date":   time.Now(),
 	}
-	cacheKey := fmt.Sprintf("transaction:%d:%d", withdraw.Id, transactionId)
+	cacheKey := fmt.Sprintf("transaction:%d:%d", withdraw.AccountId, transactionId)
 	err = t.redis.HSet(ctx, cacheKey, cacheData).Err()
 	if err != nil {
 		return 0, fmt.Errorf("failed to cache transfer data: %v", err)
@@ -156,17 +156,17 @@ func (t *TransactionRepository) Withdraw(withdraw models.InputWithdraw) (int, er
 
 func (t *TransactionRepository) Transfer(transfer models.InputTransfer) (int, error) {
 	// chek account
-	err := t.IsExistAccount(transfer.Id)
+	err := t.IsExistAccount(transfer.AccountId)
 	if err != nil {
 		return 0, err
 	}
 
-	err = t.IsLockedAccount(transfer.Id)
+	err = t.IsLockedAccount(transfer.AccountId)
 	if err != nil {
 		return 0, err
 	}
 
-	balance, err := t.CheckBalance(transfer.Id)
+	balance, err := t.CheckBalance(transfer.AccountId)
 	if err != nil {
 		return 0, err
 	}
@@ -186,7 +186,7 @@ func (t *TransactionRepository) Transfer(transfer models.InputTransfer) (int, er
 		return 0, err
 	}
 
-	targetBalance, err := t.CheckBalance(transfer.Id)
+	targetBalance, err := t.CheckBalance(transfer.AccountId)
 	if err != nil {
 		return 0, err
 	}
@@ -199,7 +199,7 @@ func (t *TransactionRepository) Transfer(transfer models.InputTransfer) (int, er
 	newTargetBalance := targetBalance + transfer.TransferSum
 
 	query := fmt.Sprintf("update %s set balance=$1 where id=$2", constants.AccountsTable)
-	_, err = tx.Exec(ctx, query, newBalance, transfer.Id)
+	_, err = tx.Exec(ctx, query, newBalance, transfer.AccountId)
 	if err != nil {
 		tx.Rollback(ctx)
 		return 0, err
@@ -213,7 +213,7 @@ func (t *TransactionRepository) Transfer(transfer models.InputTransfer) (int, er
 
 	var transactionId int
 	transactionQuery := fmt.Sprintf("insert into %s (account_id, amount, transaction_type) values ($1, $2, $3) returning id", constants.TransactionsTable)
-	row := tx.QueryRow(ctx, transactionQuery, transfer.Id, transfer.TransferSum, constants.Transfer)
+	row := tx.QueryRow(ctx, transactionQuery, transfer.AccountId, transfer.TransferSum, constants.Transfer)
 	if err := row.Scan(&transactionId); err != nil {
 		tx.Rollback(ctx)
 		return 0, err
@@ -229,7 +229,7 @@ func (t *TransactionRepository) Transfer(transfer models.InputTransfer) (int, er
 		"date":   time.Now(),
 	}
 
-	cacheKey := fmt.Sprintf("transaction:%d:%d", transfer.Id, transactionId)
+	cacheKey := fmt.Sprintf("transaction:%d:%d", transfer.AccountId, transactionId)
 
 	err = t.redis.HSet(ctx, cacheKey, cacheData).Err()
 	if err != nil {
